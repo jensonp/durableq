@@ -244,9 +244,9 @@ You need to understand:
 Why DurableQ needs it:
 Most of the difficult behavior in this project exists at the boundary between application code and the database engine.
 
-## Tier 5: Useful Depth, But Not a Prerequisite to Start
+## Tier 5: Theoretical Depth and Defensive Understanding
 
-These are important for conceptual maturity, but you do not need to finish them before beginning Milestone 0 or Milestone 1.
+These concepts matter when you need to defend design choices under sustained technical questioning, reason about anomalies precisely, and avoid shallow or slogan-based explanations.
 
 ### 21. Serializable Isolation Theory
 
@@ -278,9 +278,11 @@ You need to understand:
 Why DurableQ needs it:
 The project’s quality depends as much on precise semantics as on code correctness.
 
-## Minimal Readiness Bar
+## Mastery Bar
 
-You are ready to start the project if you can answer these without hand-waving:
+You should not aim merely to start the project. You should aim to understand it well enough that, under detailed questioning, you can justify why the chosen algorithm is safe, what its guarantees are, and where its guarantees stop.
+
+You are approaching that bar if you can answer these without hand-waving:
 
 1. Why is `SKIP LOCKED` acceptable for a queue claim path even though it returns an inconsistent view?
 2. Why must the handler execute outside the claim transaction?
@@ -289,6 +291,44 @@ You are ready to start the project if you can answer these without hand-waving:
 5. Why do the dequeue and recovery paths need partial indexes?
 6. Why must every statement in a transaction use the same `node-postgres` client?
 7. What evidence would show that your dequeue query is using the correct plan?
+
+That is still not the full bar. A stronger standard is that you can also answer:
+
+8. Why is `READ COMMITTED` sufficient for the claim path you chose, and what precisely would break if the claim protocol were split incorrectly?
+9. Under what circumstances can stale completion corrupt state, and why does lease-token compare-and-set prevent it?
+10. Why is the database row lock during claim not the same thing as the application-level lease during execution?
+11. What anomaly are you preventing with `INSERT ... ON CONFLICT`, and why is application-level read-then-insert insufficient?
+12. Why can a partial index fail to be used even when it appears logically relevant?
+13. What is the relationship between MVCC snapshot visibility and row-lock acquisition in the claim path?
+14. Why is at-least-once execution the correct guarantee statement here, and what would have to change to make a stronger claim?
+15. How do retries interact with overload, and why is jitter a correctness-adjacent operational requirement rather than a tuning detail?
+16. How would you inspect PostgreSQL during a worker race to prove which session holds locks and which session is waiting or skipping?
+17. What evidence would distinguish a correct queue under concurrency from one that merely appears to work in single-worker tests?
+
+## Defensive Understanding Checklist
+
+If someone pushes on the design, you should be able to defend all of the following clearly:
+
+1. The state machine:
+   Why each transition is legal or illegal.
+2. The invariants:
+   Why at most one current lease holder can complete a job successfully.
+3. The transaction boundaries:
+   Why the enqueue path, claim path, completion path, retry path, and recovery path each begin and end where they do.
+4. The concurrency control:
+   Why two workers cannot both obtain valid ownership of the same job.
+5. The recovery model:
+   Why crashed workers do not strand jobs forever.
+6. The idempotency model:
+   Why duplicate submission does not create duplicate logical jobs.
+7. The retry model:
+   Why retryable and terminal failures are distinct semantic classes.
+8. The observability model:
+   Why the logs and metrics are sufficient to diagnose stuck jobs, retry storms, and worker stalls.
+9. The indexing model:
+   Why the chosen indexes support the hot paths and how you verified that with `EXPLAIN`.
+10. The guarantee statement:
+    Why the system is at-least-once rather than exactly-once.
 
 ## Recommended Order
 
@@ -320,4 +360,4 @@ Use [resources.md](/Users/jensonphan/back_end/resources.md) for the source docum
 
 Use this file to answer a different question:
 
-"What do I absolutely need to understand, in order, before I build DurableQ?"
+"What do I need to understand, in the right order, to design DurableQ well enough to withstand deep technical scrutiny?"

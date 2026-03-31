@@ -8,11 +8,11 @@ The structure is deliberate:
 2. a recommended reading order
 3. a deeper technical explanation tying those sources back to DurableQ
 
-The goal is not interview fluency. The goal is to understand the concurrency and failure semantics well enough to implement the queue correctly and defend each design choice.
+The goal is not interview fluency. The goal is to understand the concurrency and failure semantics well enough to implement the queue correctly, defend each design choice precisely, and withstand deep technical questioning without collapsing into slogans or hand-waving.
 
 ## Read This First
 
-If you want the smallest first-pass reading list that still lets you start productively, read these in order:
+If you want the first reading sequence that builds a serious conceptual base rather than a shallow implementation-only familiarity, read these in order:
 
 1. [PostgreSQL 18: 13.1 Introduction (MVCC)](https://www.postgresql.org/docs/current/mvcc-intro.html)
 2. [PostgreSQL 18: 13.2 Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
@@ -23,7 +23,7 @@ If you want the smallest first-pass reading list that still lets you start produ
 7. [PostgreSQL 18: 14.1 Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)
 8. [node-postgres: Transactions](https://node-postgres.com/features/transactions)
 
-That first set is enough to begin designing the submission path, claim path, and DB schema.
+That first set is enough to begin reasoning rigorously about the submission path, claim path, and schema.
 
 Then read:
 
@@ -116,7 +116,23 @@ If you want the theory behind the database behavior, read these after the offici
 
 ## My Technical Explanation
 
-The explanations below are intentionally rigorous. They are not simplified into interview slogans.
+The explanations below are intentionally rigorous. They are not simplified into interview slogans, because the target is defensible understanding rather than conversational familiarity.
+
+## Standard Of Understanding
+
+Reading the sources is not enough. The actual bar is whether you can reconstruct the argument yourself.
+
+For DurableQ, that means you should eventually be able to do all of the following from memory and from first principles:
+
+1. explain why the claim algorithm is safe under concurrent workers
+2. explain why the system provides at-least-once execution rather than exactly-once execution
+3. explain why the lease exists in addition to the database lock
+4. explain why completion must be guarded by current lease token
+5. explain why idempotent submission and idempotent execution are different problems
+6. explain why the hot-path indexes have the shapes they do
+7. explain how PostgreSQL will behave under contention, not just how you hope it will behave
+
+If you cannot reconstruct those arguments without leaning on vague phrases, you have not finished the reading in the way this project requires.
 
 ### 1. PostgreSQL Is Not "Locking Rows Instead of Versions"; It Is MVCC Plus Locks
 
@@ -462,7 +478,7 @@ Even if you ship DurableQ using `READ COMMITTED`, understanding why that is suff
 
 ## Suggested Reading Passes
 
-### Pass 1: Enough to Start Designing
+### Pass 1: Foundational Concurrency Model
 
 Read:
 
@@ -473,9 +489,9 @@ Read:
 5. INSERT / `ON CONFLICT`
 
 Objective:
-Understand snapshots, row locks, `SKIP LOCKED`, and atomic insert-or-conflict semantics.
+Build the base model for snapshots, row locks, `SKIP LOCKED`, and atomic insert-or-conflict semantics.
 
-### Pass 2: Enough to Design the Schema and Hot Paths
+### Pass 2: Schema and Hot-Path Design
 
 Read:
 
@@ -488,7 +504,7 @@ Read:
 Objective:
 Understand how to shape the dequeue SQL, idempotency index, recovery index, and transaction code in Node.js.
 
-### Pass 3: Enough to Operate and Defend the System
+### Pass 3: Operational Diagnosis and Load Behavior
 
 Read:
 
@@ -500,7 +516,7 @@ Read:
 Objective:
 Understand how to inspect contention and why retry policy is a systems load-control problem.
 
-### Pass 4: Theory and Depth
+### Pass 4: Isolation Theory and Formal Depth
 
 Read:
 
@@ -510,9 +526,24 @@ Read:
 Objective:
 Build a deeper conceptual model of anomalies, isolation taxonomies, and why PostgreSQL’s serializable mode behaves the way it does.
 
+### Pass 5: Written Reconstruction
+
+After the reading, write your own explanations of:
+
+1. the claim protocol
+2. the stale-completion defense
+3. the idempotent submission path
+4. the retry and dead-letter semantics
+5. the recovery protocol
+6. the queue and recovery indexes
+7. the system guarantee statement
+
+Objective:
+Convert recognition into durable understanding. If you can only recognize the right words when reading the docs, you are not ready to defend the design.
+
 ## Recommended Next Step After Reading
 
-After the first two reading passes, write down your own answers to these questions before coding:
+After the reading passes, write down your own answers to these questions before coding:
 
 1. Why is `SKIP LOCKED` acceptable in a queue claim path even though it gives an inconsistent view?
 2. Why must the handler run outside the claim transaction?
@@ -523,3 +554,5 @@ After the first two reading passes, write down your own answers to these questio
 7. What evidence would convince you that the dequeue query is using the correct index?
 
 If you can answer those in writing, you understand enough to begin implementing DurableQ correctly.
+
+If you can answer them under pressure, extend them, connect them to specific SQL statements, and defend them with reference to PostgreSQL behavior, then you are approaching the level of understanding this project is meant to produce.
