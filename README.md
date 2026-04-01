@@ -1,4 +1,72 @@
-# DurableQ Project Specification
+# DurableQ
+
+DurableQ is a PostgreSQL-backed durable job queue service to be built in Node.js and TypeScript.
+
+This repository is intentionally centered on backend correctness under concurrency and failure. The project is meant to function as both a serious systems portfolio artifact and a disciplined way to learn transactions, locking, retry semantics, crash recovery, idempotency, and operational debugging.
+
+## Portfolio Summary
+
+DurableQ is designed to demonstrate:
+
+- transactional job submission
+- safe concurrent worker claiming with PostgreSQL row locking
+- lease-based crash recovery
+- stale-worker completion prevention
+- bounded retries with exponential backoff and jitter
+- dead-lettering
+- idempotent submission
+- structured logs and machine-readable metrics
+
+The target system guarantee is:
+
+- durable persistence of accepted jobs
+- at-least-once execution
+- idempotent submission
+- lease-based recovery
+- bounded retries
+- dead-lettering
+
+## Current Status
+
+The repository is currently in specification and design phase.
+
+Present in the repo now:
+
+- full project specification
+- architecture and design-defense document
+- verification and testing plan
+- fundamentals guide
+- study resources
+- resume-signal guide
+
+Highest-value next implementation milestone:
+
+- schema and migrations
+- `POST /jobs`
+- one safe worker claim path
+- one real PostgreSQL integration test
+
+## Why This Repo Is Resume-Relevant
+
+This project is deliberately scoped to surface backend and systems engineering skills that are easy to talk about vaguely and harder to implement correctly:
+
+- concurrency control under multiple workers
+- explicit failure semantics rather than happy-path CRUD behavior
+- SQL-first reasoning instead of framework abstraction
+- proof obligations around retries, stale completion, and recovery
+- operational visibility through logs, metrics, plans, and lock inspection
+
+## Docs Map
+
+- [Architecture](/Users/jensonphan/back_end/ARCHITECTURE.md)
+- [Testing Plan](/Users/jensonphan/back_end/TESTING.md)
+- [Fundamentals](/Users/jensonphan/back_end/fundamentals.md)
+- [Study Resources](/Users/jensonphan/back_end/resources.md)
+- [Resume Signal](/Users/jensonphan/back_end/resume_signal.md)
+
+---
+
+## Full Project Specification
 
 ## Purpose
 
@@ -785,6 +853,8 @@ Build a PostgreSQL-backed durable job queue service in Node/TypeScript that supp
 
 ## Related Docs
 
+- [Architecture](/Users/jensonphan/back_end/ARCHITECTURE.md)
+- [Testing Plan](/Users/jensonphan/back_end/TESTING.md)
 - [Fundamentals](/Users/jensonphan/back_end/fundamentals.md)
 - [Study Resources](/Users/jensonphan/back_end/resources.md)
 - [Resume Signal](/Users/jensonphan/back_end/resume_signal.md)
