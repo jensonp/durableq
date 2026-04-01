@@ -780,3 +780,11 @@ Week 1 implementation:
 ## Final Project Statement
 
 Build a PostgreSQL-backed durable job queue service in Node/TypeScript that supports transactional job submission, safe multi-worker claiming, lease-based crash recovery, retryable failure handling with exponential backoff and jitter, dead-lettering, idempotent submission, and operational observability, with the explicit goal of both producing a serious backend portfolio artifact and closing missing applied systems/database knowledge gaps.
+
+---
+
+## Related Docs
+
+- [Fundamentals](/Users/jensonphan/back_end/fundamentals.md)
+- [Study Resources](/Users/jensonphan/back_end/resources.md)
+- [Resume Signal](/Users/jensonphan/back_end/resume_signal.md)
