@@ -34,10 +34,8 @@ Present in the repo now:
 
 - full project specification
 - architecture and design-defense document
-- verification and testing plan
-- fundamentals guide
-- study resources
-- resume-signal guide
+- verification strategy and proof obligations
+- combined study guide and reading map
 
 Highest-value next implementation milestone:
 
@@ -59,10 +57,18 @@ This project is deliberately scoped to surface backend and systems engineering s
 ## Docs Map
 
 - [Architecture](/Users/jensonphan/back_end/ARCHITECTURE.md)
-- [Testing Plan](/Users/jensonphan/back_end/TESTING.md)
-- [Fundamentals](/Users/jensonphan/back_end/fundamentals.md)
-- [Study Resources](/Users/jensonphan/back_end/resources.md)
-- [Resume Signal](/Users/jensonphan/back_end/resume_signal.md)
+- [Study Guide](/Users/jensonphan/back_end/STUDY_GUIDE.md)
+
+## Repository Priorities
+
+If the repo is being evaluated from a resume link, the highest-value next additions are:
+
+1. a working vertical slice:
+   schema, `POST /jobs`, one safe claim path, and one real PostgreSQL integration test
+2. CI that runs linting and PostgreSQL-backed integration tests
+3. a short runbook showing how to inspect `pg_stat_activity`, `pg_locks`, and `EXPLAIN`
+4. `CONTRIBUTING.md`, `LICENSE`, `SECURITY.md`, and issue templates
+5. milestone or release notes showing what shipped, what was verified, and what remains deferred
 
 ---
 
@@ -854,7 +860,4 @@ Build a PostgreSQL-backed durable job queue service in Node/TypeScript that supp
 ## Related Docs
 
 - [Architecture](/Users/jensonphan/back_end/ARCHITECTURE.md)
-- [Testing Plan](/Users/jensonphan/back_end/TESTING.md)
-- [Fundamentals](/Users/jensonphan/back_end/fundamentals.md)
-- [Study Resources](/Users/jensonphan/back_end/resources.md)
-- [Resume Signal](/Users/jensonphan/back_end/resume_signal.md)
+- [Study Guide](/Users/jensonphan/back_end/STUDY_GUIDE.md)

@@ -339,3 +339,127 @@ To become a strong portfolio artifact, the architecture needs executable proof i
 - lock inspection workflow
 
 Until those exist, the design is coherent but not yet proven.
+
+## Verification Strategy
+
+The architecture should be judged by proof, not by prose alone.
+
+The most important evidence is not unit-test count. It is whether the repository proves the concurrency, recovery, retry, and idempotency semantics against a real PostgreSQL instance.
+
+## Required Test Categories
+
+### 1. Submission Durability
+
+Proof target:
+If the enqueue transaction commits, the job exists durably in PostgreSQL and can be retrieved.
+
+### 2. Idempotent Submission
+
+Proof target:
+The same logical request with the same idempotency key does not create duplicate logical jobs.
+
+Required cases:
+
+- sequential duplicate submission
+- concurrent duplicate submission
+- conflicting reuse of the same key
+
+### 3. Worker Claim Safety
+
+Proof target:
+A runnable job can be claimed and moved to `running` with a valid lease.
+
+### 4. Concurrent Claim Safety
+
+Proof target:
+Two workers racing do not both obtain valid ownership of the same job.
+
+This is one of the most important tests in the entire repository.
+
+### 5. Success Completion
+
+Proof target:
+The valid current lease holder can complete a job successfully.
+
+### 6. Stale Completion Rejection
+
+Proof target:
+A worker that no longer holds the current lease cannot mutate the job.
+
+This is the core proof that stale-worker corruption is prevented.
+
+### 7. Retry Scheduling
+
+Proof target:
+Retryable failure increments attempts and moves the next run time into the future.
+
+### 8. Dead-Letter Transition
+
+Proof target:
+Retry exhaustion or terminal failure moves the job to `dead_lettered`.
+
+### 9. Crash Recovery
+
+Proof target:
+A worker crash after claim does not strand the job forever.
+
+### 10. Queue Stats And Metrics Visibility
+
+Proof target:
+Operational endpoints reflect actual state changes.
+
+## Verification Matrix
+
+| Behavior | What must be proven | Evidence type |
+| --- | --- | --- |
+| Durable submission | committed enqueue persists | integration test |
+| Idempotent submission | duplicate submission does not duplicate jobs | integration test |
+| Claim safety | one worker can move queued job to running with lease | integration test |
+| Concurrent claim safety | two workers cannot both own the same job | adversarial integration test |
+| Success completion | valid lease holder can succeed job | integration test |
+| Stale completion defense | old lease holder cannot overwrite state | adversarial integration test |
+| Retry scheduling | retryable failure re-queues with delayed `run_at` | integration test |
+| Dead-lettering | exhausted or terminal jobs enter `dead_lettered` | integration test |
+| Crash recovery | expired running jobs become claimable again | integration test |
+| Queue observability | stats and metrics reflect reality | integration test |
+| Hot-path performance assumptions | intended indexes are used | `EXPLAIN` evidence |
+| Locking behavior under contention | worker races behave as expected | `pg_locks` and `pg_stat_activity` inspection |
+
+## Execution Environment
+
+The critical tests must run against a real PostgreSQL instance.
+
+Recommended setup:
+
+- Docker Compose for local PostgreSQL
+- isolated test database per suite or test run
+- migrations applied before tests
+- minimal, explicit fixtures
+
+Mocked databases do not reproduce MVCC behavior, lock conflicts, `SKIP LOCKED`, or planner behavior.
+
+## Adversarial Scenarios
+
+Some tests should be deliberately adversarial rather than purely functional.
+
+Required adversarial cases:
+
+- two workers race on one runnable job
+- a worker attempts completion after lease expiry
+- recovery overlaps with a late completion attempt
+- duplicate submissions happen concurrently
+
+These are the tests that separate a queue that "works" from a queue that is actually safe under concurrency.
+
+## Acceptance Bar
+
+DurableQ should not be presented as complete until:
+
+1. all core semantic tests exist
+2. at least one concurrent claim test passes
+3. at least one stale completion rejection test passes
+4. at least one recovery test passes
+5. stats and metrics are validated against database state
+6. hot-path query plans have been inspected
+
+Without those, the queue may appear functional, but it has not yet earned strong backend/systems credibility.
